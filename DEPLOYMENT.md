@@ -74,6 +74,28 @@ git push -u origin main
 
 ### 5. Nasazení Frontendu
 
+**DOPORUČENO: Static Site** (rychlejší a šetří free tier)
+
+1. Klikněte "New +" → "Static Site"
+2. Vyberte váš GitHub repozitář
+3. Nastavte:
+   - **Name**: `car-listing-frontend`
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `build`
+
+4. **Environment Variables** - přidejte:
+   ```
+   REACT_APP_API_URL=https://car-listing-backend.onrender.com/api
+   ```
+   (nahraďte URL za skutečnou URL vašeho backendu)
+
+5. Klikněte "Create Static Site"
+
+**ALTERNATIVA: Web Service** (pokud potřebujete dynamický server)
+
+Pokud chcete použít Web Service místo Static Site:
+
 1. Klikněte "New +" → "Web Service"
 2. Vyberte váš GitHub repozitář
 3. Nastavte:
@@ -82,16 +104,15 @@ git push -u origin main
    - **Root Directory**: `frontend`
    - **Environment**: `Docker`
    - **Plan**: FREE
-   - **Build Command**: (prázdné - použije Dockerfile)
-   - **Start Command**: `npm start`
 
-4. **Environment Variables** - přidejte:
+4. **Environment Variables**:
    ```
    REACT_APP_API_URL=https://car-listing-backend.onrender.com/api
+   PORT=3000
    ```
-   (nahraďte URL za skutečnou URL vašeho backendu z kroku 4)
 
-5. Klikněte "Create Web Service"
+5. Render automaticky použije port 3000 z Dockerfile
+6. Klikněte "Create Web Service"
 
 ### 6. Spuštění migrací
 
