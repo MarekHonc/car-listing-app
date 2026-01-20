@@ -1,0 +1,101 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  password  String
+  createdAt DateTime  @default(now())
+  
+  listings  Listing[]
+  comments  Comment[]
+  tagToListings TagToListing[]
+  
+  @@map("user")
+}
+
+model CarBrand {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  
+  carModels CarModel[]
+  
+  @@map("carbrand")
+}
+
+model CarModel {
+  id          Int       @id @default(autoincrement())
+  name        String
+  carBrandId  Int
+  engine      String
+  power       Int
+  
+  carBrand    CarBrand  @relation(fields: [carBrandId], references: [id], onDelete: Cascade)
+  listings    Listing[]
+  
+  @@map("carmodel")
+}
+
+model Listing {
+  id            Int       @id @default(autoincrement())
+  name          String
+  price         Float
+  link          String
+  imageLink     String
+  addedByUserId Int
+  isDeleted     Boolean   @default(false)
+  carModelId    Int?
+  createdAt     DateTime  @default(now())
+  modifiedAt    DateTime  @updatedAt
+  
+  addedByUser   User      @relation(fields: [addedByUserId], references: [id])
+  carModel      CarModel? @relation(fields: [carModelId], references: [id], onDelete: SetNull)
+  comments      Comment[]
+  tagToListings TagToListing[]
+  
+  @@map("listing")
+}
+
+model Comment {
+  id            Int      @id @default(autoincrement())
+  text          String
+  date          DateTime @default(now())
+  listingId     Int
+  addedByUserId Int
+  
+  listing       Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  addedByUser   User     @relation(fields: [addedByUserId], references: [id])
+  
+  @@map("comment")
+}
+
+model Tag {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  color         String
+  
+  tagToListings TagToListing[]
+  
+  @@map("tag")
+}
+
+model TagToListing {
+  tagId     Int
+  listingId Int
+  userId    Int
+  
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id])
+  
+  @@id([tagId, listingId, userId])
+  @@map("tagtolisting")
+}
