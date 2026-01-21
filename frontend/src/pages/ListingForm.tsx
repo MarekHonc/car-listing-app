@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Form, Button, Alert, Card, Row, Col, Modal } from 'react-bootstrap';
+import { Container, Form, Button, Alert, Card, Row, Col, Modal, Badge } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   createListing,
@@ -9,8 +9,13 @@ import {
   getCarModels,
   createCarBrand,
   createCarModel,
+  getLocations,
+  createLocation,
+  getTags,
+  createTag,
+  addTagToListing,
 } from '../services/api';
-import { CarBrand, CarModel } from '../types';
+import { CarBrand, CarModel, Location, Tag } from '../types';
 
 const ListingForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,19 +27,30 @@ const ListingForm: React.FC = () => {
   const [link, setLink] = useState('');
   const [imageLink, setImageLink] = useState('');
   const [carModelId, setCarModelId] = useState<string>('');
+  const [locationId, setLocationId] = useState<string>('');
   const [isDeleted, setIsDeleted] = useState(false);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   const [carBrands, setCarBrands] = useState<CarBrand[]>([]);
   const [carModels, setCarModels] = useState<CarModel[]>([]);
   const [allCarModels, setAllCarModels] = useState<CarModel[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string>('');
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
 
   const [showBrandModal, setShowBrandModal] = useState(false);
   const [showModelModal, setShowModelModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showTagModal, setShowTagModal] = useState(false);
+  
   const [newBrandName, setNewBrandName] = useState('');
   const [newModelName, setNewModelName] = useState('');
   const [newModelEngine, setNewModelEngine] = useState('');
   const [newModelPower, setNewModelPower] = useState('');
+  const [newLocationName, setNewLocationName] = useState('');
+  const [newLocationZipCode, setNewLocationZipCode] = useState('');
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagColor, setNewTagColor] = useState('#007bff');
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -62,13 +78,17 @@ const ListingForm: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [brandsData, modelsData] = await Promise.all([
+      const [brandsData, modelsData, locationsData, tagsData] = await Promise.all([
         getCarBrands(),
         getCarModels(),
+        getLocations(),
+        getTags(),
       ]);
       setCarBrands(brandsData);
       setAllCarModels(modelsData);
       setCarModels(modelsData);
+      setLocations(locationsData);
+      setTags(tagsData);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Chyba při načítání dat');
     }
@@ -82,6 +102,7 @@ const ListingForm: React.FC = () => {
       setLink(listing.link);
       setImageLink(listing.imageLink);
       setCarModelId(listing.carModelId?.toString() || '');
+      setLocationId(listing.locationId?.toString() || '');
       setIsDeleted(listing.isDeleted);
       if (listing.carModelId && listing.carModel) {
         setSelectedBrandId(listing.carModel.carBrandId.toString());
@@ -91,12 +112,25 @@ const ListingForm: React.FC = () => {
     }
   };
 
+  // Validace URL obrázku - zakomentováno kvůli CORS
+  // const validateImageUrl = async (url: string): Promise<boolean> => {
+  //   try {
+  //     setValidatingImage(true);
+  //     const response = await axios.head(url, { timeout: 5000 });
+  //     return response.status === 200;
+  //   } catch (error) {
+  //     return false;
+  //   } finally {
+  //     setValidatingImage(false);
+  //   }
+  // };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!name || !price || !link || !imageLink) {
-      setError('Vyplňte všechna povinná pole');
+    if (!name || !price || !link || !imageLink || !locationId) {
+      setError('Vyplňte všechna povinná pole (název, cena, link, obrázek, lokalita)');
       return;
     }
 
@@ -104,6 +138,13 @@ const ListingForm: React.FC = () => {
       setError('Cena musí být kladné číslo');
       return;
     }
+
+    // Validace URL obrázku - zakomentováno kvůli CORS
+    // const isImageValid = await validateImageUrl(imageLink);
+    // if (!isImageValid) {
+    //   setError('Odkaz na obrázek je neplatný nebo obrázek není dostupný (404)');
+    //   return;
+    // }
 
     setLoading(true);
 
@@ -114,13 +155,25 @@ const ListingForm: React.FC = () => {
         link,
         imageLink,
         carModelId: carModelId ? parseInt(carModelId) : undefined,
+        locationId: parseInt(locationId),
         isDeleted,
       };
 
+      let createdListingId: number;
+
       if (isEdit) {
         await updateListing(parseInt(id!), data);
+        createdListingId = parseInt(id!);
       } else {
-        await createListing(data);
+        const created = await createListing(data);
+        createdListingId = created.id;
+      }
+
+      // Přidání štítků k novému inzerátu
+      if (!isEdit && selectedTagIds.length > 0) {
+        for (const tagId of selectedTagIds) {
+          await addTagToListing({ tagId, listingId: createdListingId });
+        }
       }
 
       navigate('/');
@@ -178,6 +231,50 @@ const ListingForm: React.FC = () => {
     }
   };
 
+  const handleCreateLocation = async () => {
+    if (!newLocationName || !newLocationZipCode) {
+      setError('Vyplňte všechna pole pro lokalitu');
+      return;
+    }
+
+    try {
+      const location = await createLocation({ name: newLocationName, zipCode: newLocationZipCode });
+      setLocations([...locations, location]);
+      setLocationId(location.id.toString());
+      setNewLocationName('');
+      setNewLocationZipCode('');
+      setShowLocationModal(false);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Chyba při vytváření lokality');
+    }
+  };
+
+  const handleCreateTag = async () => {
+    if (!newTagName) {
+      setError('Vyplňte název štítku');
+      return;
+    }
+
+    try {
+      const tag = await createTag({ name: newTagName, color: newTagColor });
+      setTags([...tags, tag]);
+      setSelectedTagIds([...selectedTagIds, tag.id]);
+      setNewTagName('');
+      setNewTagColor('#007bff');
+      setShowTagModal(false);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Chyba při vytváření štítku');
+    }
+  };
+
+  const handleTagToggle = (tagId: number) => {
+    if (selectedTagIds.includes(tagId)) {
+      setSelectedTagIds(selectedTagIds.filter(id => id !== tagId));
+    } else {
+      setSelectedTagIds([...selectedTagIds, tagId]);
+    }
+  };
+
   return (
     <Container className="mt-4">
       <Card>
@@ -227,6 +324,35 @@ const ListingForm: React.FC = () => {
             </Form.Group>
 
             <Row>
+              <Col md={10}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Lokalita *</Form.Label>
+                  <Form.Select
+                    value={locationId}
+                    onChange={(e) => setLocationId(e.target.value)}
+                    required
+                  >
+                    <option value="">Vyberte lokalitu</option>
+                    {locations.map((location) => (
+                      <option key={location.id} value={location.id}>
+                        {location.name} ({location.zipCode})
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={2} className="d-flex align-items-end">
+                <Button
+                  variant="outline-primary"
+                  className="mb-3"
+                  onClick={() => setShowLocationModal(true)}
+                >
+                  Nová lokalita
+                </Button>
+              </Col>
+            </Row>
+
+            <Row>
               <Col md={5}>
                 <Form.Group className="mb-3">
                   <Form.Label>Značka</Form.Label>
@@ -264,7 +390,7 @@ const ListingForm: React.FC = () => {
                     <option value="">Vyberte model</option>
                     {carModels.map((model) => (
                       <option key={model.id} value={model.id}>
-                        {model.name}
+                        {model.name} - {model.engine} ({model.power} kW)
                       </option>
                     ))}
                   </Form.Select>
@@ -280,6 +406,36 @@ const ListingForm: React.FC = () => {
             >
               Nový model
             </Button>
+
+            {!isEdit && (
+              <Form.Group className="mb-3">
+                <Form.Label>Štítky</Form.Label>
+                <div className="mb-2">
+                  {tags.map((tag) => (
+                    <Badge
+                      className="custom-badge"
+                      key={tag.id}
+                      style={{ 
+                        ["--tag-color" as any]: tag.color,
+                        cursor: 'pointer',
+                        marginRight: '5px',
+                        marginBottom: '5px'
+                      } as React.CSSProperties} 
+                      onClick={() => handleTagToggle(tag.id)}
+                    >
+                      {tag.name} {selectedTagIds.includes(tag.id) && '✓'}
+                    </Badge>
+                  ))}
+                </div>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setShowTagModal(true)}
+                >
+                  + Vytvořit nový štítek
+                </Button>
+              </Form.Group>
+            )}
 
             {isEdit && (
               <Form.Group className="mb-3">
@@ -304,6 +460,7 @@ const ListingForm: React.FC = () => {
         </Card.Body>
       </Card>
 
+      {/* Brand Modal */}
       <Modal show={showBrandModal} onHide={() => setShowBrandModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Nová značka</Modal.Title>
@@ -328,6 +485,7 @@ const ListingForm: React.FC = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* Model Modal */}
       <Modal show={showModelModal} onHide={() => setShowModelModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Nový model</Modal.Title>
@@ -365,6 +523,74 @@ const ListingForm: React.FC = () => {
             Zrušit
           </Button>
           <Button variant="primary" onClick={handleCreateModel}>
+            Vytvořit
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Location Modal */}
+      <Modal show={showLocationModal} onHide={() => setShowLocationModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Nová lokalita</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className="mb-3">
+            <Form.Label>Název lokality</Form.Label>
+            <Form.Control
+              type="text"
+              value={newLocationName}
+              onChange={(e) => setNewLocationName(e.target.value)}
+              placeholder="např. Praha 1"
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>PSČ</Form.Label>
+            <Form.Control
+              type="text"
+              value={newLocationZipCode}
+              onChange={(e) => setNewLocationZipCode(e.target.value)}
+              placeholder="např. 110 00"
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowLocationModal(false)}>
+            Zrušit
+          </Button>
+          <Button variant="primary" onClick={handleCreateLocation}>
+            Vytvořit
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Tag Modal */}
+      <Modal show={showTagModal} onHide={() => setShowTagModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Nový štítek</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className="mb-3">
+            <Form.Label>Název štítku</Form.Label>
+            <Form.Control
+              type="text"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Barva štítku</Form.Label>
+            <Form.Control
+              type="color"
+              value={newTagColor}
+              onChange={(e) => setNewTagColor(e.target.value)}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowTagModal(false)}>
+            Zrušit
+          </Button>
+          <Button variant="primary" onClick={handleCreateTag}>
             Vytvořit
           </Button>
         </Modal.Footer>

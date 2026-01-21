@@ -161,6 +161,7 @@ const ListingDetail: React.FC = () => {
   }
 
   const userTags = listing.tagToListings?.filter((ttl) => ttl.userId === user?.id) || [];
+  const allTags = listing.tagToListings || [];
   const availableTags = tags.filter(
     (tag) => !userTags.some((ttl) => ttl.tagId === tag.id)
   );
@@ -183,6 +184,11 @@ const ListingDetail: React.FC = () => {
           <Card.Title>{listing.name}</Card.Title>
           <Card.Text>
             <strong>Cena:</strong> {listing.price.toLocaleString()} Kč<br />
+            {listing.location && (
+              <>
+                <strong>Lokalita:</strong> {listing.location.name} ({listing.location.zipCode})<br />
+              </>
+            )}
             {listing.carModel && (
               <>
                 <strong>Značka:</strong> {listing.carModel.carBrand?.name}<br />
@@ -201,20 +207,22 @@ const ListingDetail: React.FC = () => {
 
           <div className="mb-3">
             <strong>Štítky: </strong>
-            {userTags.map((ttl) => (
+            {allTags.map((ttl) => (
               <Badge
-                key={ttl.tag.id}
-                style={{ backgroundColor: ttl.tag.color }}
-                className="me-1"
+                key={`${ttl.tag.id}-${ttl.userId}`}
+                style={{ ["--tag-color" as any]: ttl.tag.color } as React.CSSProperties}
+                className="me-1 custom-badge"
               >
                 {ttl.tag.name}
-                <span
-                  className="ms-2"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => handleRemoveTag(ttl.tagId)}
-                >
-                  ×
-                </span>
+                {ttl.userId === user?.id && (
+                  <span
+                    className="ms-2"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleRemoveTag(ttl.tagId)}
+                  >
+                    ×
+                  </span>
+                )}
               </Badge>
             ))}
             <Button

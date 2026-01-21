@@ -36,6 +36,7 @@ export const getAllListings = async (req: AuthRequest, res: Response): Promise<v
             carBrand: true,
           },
         },
+        location: true,
         addedByUser: {
           select: {
             id: true,
@@ -86,6 +87,7 @@ export const getListingById = async (req: AuthRequest, res: Response): Promise<v
             carBrand: true,
           },
         },
+        location: true,
         addedByUser: {
           select: {
             id: true,
@@ -133,7 +135,7 @@ export const createListing = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const { name, price, link, imageLink, carModelId } = req.body;
+    const { name, price, link, imageLink, carModelId, locationId } = req.body;
     const userId = req.user!.userId;
 
     if (carModelId) {
@@ -147,6 +149,17 @@ export const createListing = async (req: AuthRequest, res: Response): Promise<vo
       }
     }
 
+    if (locationId) {
+      const location = await prisma.location.findUnique({
+        where: { id: locationId },
+      });
+
+      if (!location) {
+        res.status(404).json({ error: 'Lokalita nenalezena' });
+        return;
+      }
+    }
+
     const listing = await prisma.listing.create({
       data: {
         name,
@@ -154,6 +167,7 @@ export const createListing = async (req: AuthRequest, res: Response): Promise<vo
         link,
         imageLink,
         carModelId: carModelId || null,
+        locationId: locationId || null,
         addedByUserId: userId,
       },
       include: {
@@ -162,6 +176,7 @@ export const createListing = async (req: AuthRequest, res: Response): Promise<vo
             carBrand: true,
           },
         },
+        location: true,
         addedByUser: {
           select: {
             id: true,
@@ -187,7 +202,7 @@ export const updateListing = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     const { id } = req.params;
-    const { name, price, link, imageLink, carModelId, isDeleted } = req.body;
+    const { name, price, link, imageLink, carModelId, locationId, isDeleted } = req.body;
 
     const existingListing = await prisma.listing.findUnique({
       where: { id: parseInt(id) },
@@ -209,6 +224,17 @@ export const updateListing = async (req: AuthRequest, res: Response): Promise<vo
       }
     }
 
+    if (locationId) {
+      const location = await prisma.location.findUnique({
+        where: { id: locationId },
+      });
+
+      if (!location) {
+        res.status(404).json({ error: 'Lokalita nenalezena' });
+        return;
+      }
+    }
+
     const listing = await prisma.listing.update({
       where: { id: parseInt(id) },
       data: {
@@ -217,6 +243,7 @@ export const updateListing = async (req: AuthRequest, res: Response): Promise<vo
         link,
         imageLink,
         carModelId: carModelId || null,
+        locationId: locationId || null,
         isDeleted,
       },
       include: {
@@ -225,6 +252,7 @@ export const updateListing = async (req: AuthRequest, res: Response): Promise<vo
             carBrand: true,
           },
         },
+        location: true,
         addedByUser: {
           select: {
             id: true,

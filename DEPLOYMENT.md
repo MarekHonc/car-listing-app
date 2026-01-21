@@ -114,23 +114,14 @@ Pokud chcete použít Web Service místo Static Site:
 5. Render automaticky použije port 3000 z Dockerfile
 6. Klikněte "Create Web Service"
 
-### 6. Spuštění migrací
-
-Po nasazení backendu:
-1. V Render dashboardu otevřete váš backend service
-2. Klikněte na záložku "Shell"
-3. Spusťte:
-   ```bash
-   npx prisma migrate deploy
-   npx prisma generate
-   ```
-
-### 7. Testování
+### 6. Testování
 
 Vaše aplikace je nyní live na:
 - **Frontend**: `https://car-listing-frontend.onrender.com`
 - **Backend API**: `https://car-listing-backend.onrender.com`
 - **Swagger docs**: `https://car-listing-backend.onrender.com/api-docs`
+
+**Poznámka:** Migrace se spouštějí automaticky při každém deployi backendu, takže není potřeba nic dělat ručně!
 
 ---
 
@@ -176,13 +167,22 @@ Vaše aplikace je nyní live na:
 - Ověřte, že všechny služby jsou ve stejné regionu
 
 ### Frontend nemůže volat API
-- Zkontrolujte `REACT_APP_API_URL` proměnnou
+- **Nejčastější problém**: Environment variable nebyla nastavená při buildu
+- **Řešení**:
+  1. V Render dashboardu zkontrolujte Environment variables
+  2. Ujistěte se, že `REACT_APP_API_URL` je nastavená
+  3. Klikněte "Manual Deploy" → "Clear build cache & deploy"
+  4. Nebo pushněte prázdný commit: `git commit --allow-empty -m "Rebuild" && git push`
+- Zkontrolujte `REACT_APP_API_URL` proměnnou (musí začínat `REACT_APP_`)
 - Ujistěte se, že backend běží
 - Zkontrolujte CORS nastavení v backendu
+- Otevřete Developer Console v prohlížeči (F12) a podívejte se na chyby
 
 ### Migrace nefungují
-- Spusťte je ručně přes Shell v Render dashboardu
+- Migrace se spouštějí automaticky při startu backendu
+- Zkontrolujte logy backendu: `docker-compose logs backend` nebo v Render dashboardu
 - Ujistěte se, že `DATABASE_URL` je správně nastavená
+- Pokud stále nefungují, můžete je spustit ručně přes Render Shell (v placené verzi)
 
 ---
 

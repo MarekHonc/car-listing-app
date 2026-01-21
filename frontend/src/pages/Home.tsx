@@ -151,9 +151,11 @@ const Home: React.FC = () => {
               {tags.map((tag) => (
                 <Badge
                   key={tag.id}
-                  bg={selectedTags.includes(tag.id) ? 'primary' : 'secondary'}
-                  className="me-2 mb-2"
-                  style={{ cursor: 'pointer', backgroundColor: selectedTags.includes(tag.id) ? tag.color : undefined }}
+                  className="me-2 mb-2 custom-badge"
+                  style={{ 
+                    cursor: 'pointer', 
+                    ["--tag-color" as any]: `${selectedTags.includes(tag.id) ? tag.color : '#6c757d'}`,
+                  } as React.CSSProperties}
                   onClick={() => handleTagToggle(tag.id)}
                 >
                   {tag.name}
@@ -191,7 +193,13 @@ const Home: React.FC = () => {
                 <Card.Body>
                   <Card.Title>{listing.name}</Card.Title>
                   <Card.Text>
+                    <a href={listing.link} target="_blank">Inzerát</a><br />
                     <strong>Cena:</strong> {listing.price.toLocaleString()} Kč<br />
+                    {listing.location && (
+                      <>
+                        <strong>Lokalita:</strong> {listing.location.name} ({listing.location.zipCode})<br />
+                      </>
+                    )}
                     {listing.carModel && (
                       <>
                         <strong>Značka:</strong> {listing.carModel.carBrand?.name}<br />
@@ -212,7 +220,11 @@ const Home: React.FC = () => {
                   </Card.Text>
                   <div className="mb-2">
                     {listing.tagToListings?.map((ttl) => (
-                      <Badge key={ttl.tag.id} style={{ backgroundColor: ttl.tag.color }} className="me-1">
+                      <Badge 
+                        key={ttl.tag.id} 
+                        style={{ ["--tag-color" as any]: ttl.tag.color } as React.CSSProperties}
+                        className="me-1 custom-badge"
+                      >
                         {ttl.tag.name}
                       </Badge>
                     ))}

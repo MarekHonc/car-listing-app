@@ -8,9 +8,10 @@ import {
   CarModel,
   Comment,
   Tag,
+  Location,
 } from '../types';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://car-listing-backend-r37s.onrender.com/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -106,5 +107,18 @@ export const addTagToListing = (data: { tagId: number; listingId: number }): Pro
 
 export const removeTagFromListing = (tagId: number, listingId: number): Promise<void> =>
   api.delete(`/tags/${tagId}/listing/${listingId}`).then((res) => res.data);
+
+// Locations
+export const getLocations = (): Promise<Location[]> =>
+  api.get('/locations').then((res) => res.data);
+
+export const createLocation = (data: { name: string; zipCode: string }): Promise<Location> =>
+  api.post('/locations', data).then((res) => res.data);
+
+export const updateLocation = (id: number, data: { name: string; zipCode: string }): Promise<Location> =>
+  api.put(`/locations/${id}`, data).then((res) => res.data);
+
+export const deleteLocation = (id: number): Promise<void> =>
+  api.delete(`/locations/${id}`).then((res) => res.data);
 
 export default api;

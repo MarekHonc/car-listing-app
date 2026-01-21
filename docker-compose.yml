@@ -53,18 +53,14 @@ services:
       dockerfile: Dockerfile
     container_name: car-listing-frontend
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       REACT_APP_API_URL: http://localhost:5000/api
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     depends_on:
       - backend
     networks:
       - car-listing-network
-    command: npm start
 
 volumes:
   postgres-data:

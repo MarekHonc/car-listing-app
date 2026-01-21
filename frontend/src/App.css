@@ -1,0 +1,4 @@
+.custom-badge {
+  background-color: var(--tag-color) !important;
+  color: #fff !important;
+}

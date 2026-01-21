@@ -3,6 +3,12 @@ export interface User {
   name: string;
 }
 
+export interface Location {
+  id: number;
+  name: string;
+  zipCode: string;
+}
+
 export interface CarBrand {
   id: number;
   name: string;
@@ -49,10 +55,12 @@ export interface Listing {
   addedByUserId: number;
   isDeleted: boolean;
   carModelId?: number;
+  locationId?: number;
   createdAt: string;
   modifiedAt: string;
   addedByUser: User;
   carModel?: CarModel;
+  location?: Location;
   comments?: Comment[];
   tagToListings?: TagToListing[];
 }

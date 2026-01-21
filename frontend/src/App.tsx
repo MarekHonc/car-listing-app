@@ -10,7 +10,9 @@ import ListingForm from './pages/ListingForm';
 import ListingDetail from './pages/ListingDetail';
 import CarsManagement from './pages/CarsManagement';
 import TagsManagement from './pages/TagsManagement';
+import LocationsManagement from './pages/LocationsManagement';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import "./App.css";
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -72,6 +74,14 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <TagsManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/locations"
+          element={
+            <ProtectedRoute>
+              <LocationsManagement />
             </ProtectedRoute>
           }
         />

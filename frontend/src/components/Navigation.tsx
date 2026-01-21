@@ -28,10 +28,13 @@ const Navigation: React.FC = () => {
               Přidat inzerát
             </Nav.Link>
             <Nav.Link as={Link} to="/cars">
-              Správa značek/modelů
+              Značky/Modely
+            </Nav.Link>
+            <Nav.Link as={Link} to="/locations">
+              Lokality
             </Nav.Link>
             <Nav.Link as={Link} to="/tags">
-              Správa štítků
+              Štítky
             </Nav.Link>
           </Nav>
           <Nav>

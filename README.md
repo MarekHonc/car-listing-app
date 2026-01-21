@@ -55,7 +55,12 @@ cd car-listing-app
 docker-compose up --build
 ```
 
-**Poznámka**: Backend se automaticky inicializuje - vygeneruje Prisma client a aplikuje migrace databáze. První spuštění může trvat 1-2 minuty.
+**Poznámka**: Backend se automaticky inicializuje při každém spuštění:
+- Vygeneruje Prisma client
+- Aplikuje všechny databázové migrace
+- Spustí server
+
+První spuštění může trvat 1-2 minuty.
 
 3. Počkejte, až uvidíte v logu:
 ```

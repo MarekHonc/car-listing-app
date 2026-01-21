@@ -9,6 +9,7 @@ import carModelRoutes from './routes/carModel.routes';
 import listingRoutes from './routes/listing.routes';
 import commentRoutes from './routes/comment.routes';
 import tagRoutes from './routes/tag.routes';
+import locationRoutes from './routes/location.routes';
 
 dotenv.config();
 
@@ -63,6 +64,7 @@ app.use('/api/carmodels', carModelRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/locations', locationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

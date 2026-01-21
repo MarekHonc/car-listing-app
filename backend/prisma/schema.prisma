@@ -22,6 +22,16 @@ model User {
   @@map("user")
 }
 
+model Location {
+  id       Int       @id @default(autoincrement())
+  name     String
+  zipCode  String
+  
+  listings Listing[]
+  
+  @@map("location")
+}
+
 model CarBrand {
   id        Int        @id @default(autoincrement())
   name      String     @unique
@@ -53,11 +63,13 @@ model Listing {
   addedByUserId Int
   isDeleted     Boolean   @default(false)
   carModelId    Int?
+  locationId    Int?
   createdAt     DateTime  @default(now())
   modifiedAt    DateTime  @updatedAt
   
   addedByUser   User      @relation(fields: [addedByUserId], references: [id])
   carModel      CarModel? @relation(fields: [carModelId], references: [id], onDelete: SetNull)
+  location      Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
   comments      Comment[]
   tagToListings TagToListing[]
   
